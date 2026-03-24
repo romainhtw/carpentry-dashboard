@@ -8,19 +8,18 @@ import json
 from PIL import Image
 
 # Page Configuration
-st.set_page_config(page_title="Carpentry Dashboard", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Carpentry Engine", layout="wide", initial_sidebar_state="expanded")
 
-# Premium Silicon Valley UX CSS Injection
+# Ultra-Minimalist CSS Injection (3 Colors Max: Zinc Dark, Soft White, Accent Blue)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
     :root {
-        --bg-prime: #09090b; /* Zinc 950 */
-        --bg-sec: #18181b;   /* Zinc 900 */
-        --border: #27272a;   /* Zinc 800 */
-        --brand-accent: #3b82f6; /* Modern Blue */
-        --profit-accent: #10b981; /* Emerald Green */
+        --bg-prime: #09090b; /* Deep Dark */
+        --bg-sec: #18181b;   /* Slightly elevated dark */
+        --border: #27272a;   /* Subtle border */
+        --accent: #3b82f6;   /* Sole accent color */
         --text-main: #fafafa;
         --text-muted: #a1a1aa;
     }
@@ -33,57 +32,55 @@ st.markdown("""
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* Custom SV-Style Metric Cards */
+    /* Custom SV-Style Metric Cards with Airy Padding */
     .sv-card {
         background-color: var(--bg-sec);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 24px;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 32px;  /* Increased padding for airy feel */
+        margin-bottom: 32px;
+        transition: all 0.4s ease;
     }
 
     .sv-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
         border-color: #3f3f46;
     }
 
     .sv-title {
         color: var(--text-muted);
         font-size: 0.85rem;
-        font-weight: 600;
+        font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }
 
     .sv-value {
-        font-size: 2.8rem;
-        font-weight: 700;
+        font-size: 3rem;
+        font-weight: 300;
         line-height: 1.1;
         margin: 0;
-    }
-
-    .sv-value.green {
-        color: var(--profit-accent);
-    }
-
-    .sv-value.orange {
-        color: var(--brand-accent);
+        color: var(--text-main);
     }
     
-    .sv-value.white {
-        color: var(--text-main);
+    .sv-value.accent {
+        color: var(--accent);
     }
 
     .sv-subtext {
         color: var(--text-muted);
         font-size: 0.9rem;
-        margin-top: 12px;
+        margin-top: 16px;
         font-weight: 400;
+    }
+    
+    .block-explainer {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-top: -10px;
+        margin-bottom: 24px;
+        font-weight: 300;
+        line-height: 1.5;
     }
 
     /* Sidebar Styling */
@@ -94,31 +91,31 @@ st.markdown("""
     
     /* Expander styling */
     .streamlit-expanderHeader {
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         color: var(--text-main) !important;
     }
     
     /* Headers */
     h1, h2, h3 {
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         letter-spacing: -0.02em;
+        color: var(--text-main) !important;
     }
     
     h1 {
-        color: var(--text-main) !important;
-        margin-bottom: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
     }
     
     /* Divider */
     hr {
         border-color: var(--border);
-        margin: 2.5rem 0;
+        margin: 4rem 0; /* More airy */
     }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("Carpentry Precision Engine")
-st.markdown("<p style='color: #8b949e; margin-top: -15px; font-size: 1.1rem; margin-bottom: 30px;'>Enterprise-grade financial intelligence for Australian construction.</p>", unsafe_allow_html=True)
+st.markdown("<p class='block-explainer'>Enterprise-grade financial intelligence for Australian construction.</p><br>", unsafe_allow_html=True)
 
 # --- State initialization ---
 if 'workers' not in st.session_state:
@@ -174,13 +171,14 @@ def calculate_thc(worker):
     return thc
 
 # --- Sidebar: Configuration ---
-st.sidebar.markdown("### ⚙️ System Configuration")
+st.sidebar.markdown("### System Configuration")
+st.sidebar.markdown("<p style='color:#a1a1aa; font-size:0.85rem; margin-bottom:20px;'>(On mobile devices, this menu contains all your core worker configuration).</p>", unsafe_allow_html=True)
 
-api_key = st.sidebar.text_input("Gemini API Key", type="password", help="Required for Document Intelligence OCR.")
+api_key = st.sidebar.text_input("Gemini API Key", type="password")
 if api_key:
     genai.configure(api_key=api_key)
 
-st.sidebar.markdown("<br>### 👷 Worker Profiles", unsafe_allow_html=True)
+st.sidebar.markdown("<br>### Worker Profiles", unsafe_allow_html=True)
 for i, worker in enumerate(st.session_state.workers):
     with st.sidebar.expander(worker["name"], expanded=False):
         worker["name"] = st.text_input("Name", value=worker["name"], key=f"name_{i}")
@@ -200,23 +198,28 @@ for i, worker in enumerate(st.session_state.workers):
         worker["hours_billed"] = c_hb.number_input("Hrs Billed", value=worker.get("hours_billed", 35.0), key=f"hb_{i}")
         
         thc = calculate_thc(worker)
-        st.markdown(f"<div style='background:#18181b; padding:10px; border-radius:8px; text-align:center; border:1px solid #27272a; margin-top:10px;'>True Hourly Cost (THC)<br><span style='color:#3b82f6; font-size:1.4rem; font-weight:700;'>${thc:.2f}/hr</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#18181b; padding:15px; border-radius:8px; text-align:center; border:1px solid #27272a; margin-top:10px;'><span style='color:#a1a1aa; font-size:0.8rem; text-transform:uppercase;'>True Hourly Cost</span><br><span style='color:#3b82f6; font-size:1.5rem; font-weight:300;'>${thc:.2f}/hr</span></div>", unsafe_allow_html=True)
 
 # Main Application Tabs
-tab1, tab2 = st.tabs(["📊 Analytics Engine", "📁 Intelligence Pipeline"])
+tab1, tab2 = st.tabs(["Analytics Engine", "Intelligence Pipeline"])
 
 with tab1:
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # --- Top Metrics Row ---
     FY_HOURS = 1824 # ~152 hrs * 12 months
     
-    st.markdown("### The Sweet Spot Margin Estimator")
+    st.markdown("### The Margin Estimator")
+    st.markdown("<p class='block-explainer'>Adjust your target global charge rate to instantly simulate team-wide profit projections.</p>", unsafe_allow_html=True)
     
     slider_col, toggle_col = st.columns([3, 1])
     with slider_col:
-        global_charge_rate = st.slider("Global Target Charge Rate ($/hr)", min_value=60.0, max_value=150.0, value=90.0, step=1.0)
+        global_charge_rate = st.slider("Global Target Charge Rate ($/hr)", min_value=60.0, max_value=150.0, value=90.0, step=1.0, label_visibility="collapsed")
     with toggle_col:
-        gst_toggle = st.radio("Accounting View", ["Gross (Inc GST)", "Net (Ex-GST)"], horizontal=True)
+        gst_toggle = st.radio("Accounting View", ["Gross (Inc GST)", "Net (Ex-GST)"], horizontal=True, label_visibility="collapsed")
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # Calculate Totals
     total_fy_profit = sum((global_charge_rate - calculate_thc(w)) * FY_HOURS for w in st.session_state.workers)
@@ -232,7 +235,7 @@ with tab1:
         st.markdown(f"""
         <div class="sv-card">
             <div class="sv-title">Projected FY Net Profit</div>
-            <div class="sv-value green">${display_profit:,.0f}</div>
+            <div class="sv-value accent">${display_profit:,.0f}</div>
             <div class="sv-subtext">Based on {FY_HOURS} hours/yr • {gst_label}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -241,7 +244,7 @@ with tab1:
         st.markdown(f"""
         <div class="sv-card">
             <div class="sv-title">Projected FY Revenue</div>
-            <div class="sv-value orange">${display_revenue:,.0f}</div>
+            <div class="sv-value">${display_revenue:,.0f}</div>
             <div class="sv-subtext">Cumulative across {len(st.session_state.workers)} workers • {gst_label}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -251,15 +254,16 @@ with tab1:
         st.markdown(f"""
         <div class="sv-card">
             <div class="sv-title">Average Hourly Margin</div>
-            <div class="sv-value white">${avg_margin:,.2f}</div>
+            <div class="sv-value">${avg_margin:,.2f}</div>
             <div class="sv-subtext">Average net profit created per man-hour</div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
     
     # --- Margin Table styling ---
     st.markdown("### Individual Workforce Margins")
+    st.markdown("<p class='block-explainer'>A granular breakdown of the true cost versus billed margin for every active worker.</p>", unsafe_allow_html=True)
     data = []
     for worker in st.session_state.workers:
         thc = calculate_thc(worker)
@@ -278,10 +282,10 @@ with tab1:
     st.divider()
 
     # --- Efficiency & Burn Rate ---
-    eff_col, burn_col = st.columns([1, 1], gap="large")
+    eff_col, empty_col, burn_col = st.columns([10, 1, 10])
     with eff_col:
         st.markdown("### Billing Efficiency Check")
-        st.markdown("<p style='color:var(--text-muted); font-size:0.9rem;'>Highlighting disparities between hours paid and billed offsite.</p>", unsafe_allow_html=True)
+        st.markdown("<p class='block-explainer'>Monitors the discrepancy between hours paid to your team and hours actually billed to clients.</p>", unsafe_allow_html=True)
         eff_data = []
         for worker in st.session_state.workers:
             hp = worker.get("hours_paid", 40.0)
@@ -290,17 +294,15 @@ with tab1:
             gap_percent = (gap / hp * 100) if hp > 0 else 0
             eff_data.append({
                 "Worker": worker["name"], "Paid": hp, "Billed": hb, 
-                "Gap %": f"{gap_percent:.1f}%", "Status": "Critical Leak > 10%" if gap_percent > 10 else "Healthy"
+                "Gap %": f"{gap_percent:.1f}%", "Status": "Action Required" if gap_percent > 10 else "Healthy"
             })
         
         df_eff = pd.DataFrame(eff_data)
-        def highlight_gap(row):
-            return ['background-color: rgba(255, 51, 51, 0.15); color: #FF6B6B;' if 'Critical' in row['Status'] else '' for _ in row]
-        st.dataframe(df_eff.style.apply(highlight_gap, axis=1), use_container_width=True, hide_index=True)
+        st.dataframe(df_eff, use_container_width=True, hide_index=True)
 
     with burn_col:
         st.markdown("### Organizational Burn Rate")
-        st.markdown("<p style='color:var(--text-muted); font-size:0.9rem;'>Fixed monthly overhead trajectory (FY25/26).</p>", unsafe_allow_html=True)
+        st.markdown("<p class='block-explainer'>Tracks your fixed monthly trajectory across core overhead categories.</p>", unsafe_allow_html=True)
         burn_data = pd.DataFrame({
             "Month": ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"],
             "Fuel": [1200, 1250, 1100, 1400, 1300, 1000, 950, 1150, 1300, 1280, 1450, 1500],
@@ -309,7 +311,7 @@ with tab1:
             "Apps": [150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150]
         })
         fig = px.area(burn_data, x="Month", y=["Apps", "Insurance", "Fuel", "Visa Fees"], 
-                      color_discrete_sequence=['#52525b', '#71717a', '#a1a1aa', '#3b82f6'])
+                      color_discrete_sequence=['#27272a', '#3f3f46', '#52525b', '#3b82f6'])
         fig.update_layout(
             plot_bgcolor='rgba(0,0,0,0)', 
             paper_bgcolor='rgba(0,0,0,0)', 
@@ -321,18 +323,23 @@ with tab1:
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
 with tab2:
+    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("### Document Intelligence Pipeline")
-    st.markdown("<p style='color:var(--text-muted); font-size:0.95rem; margin-bottom: 20px;'>Drop receipts, bank CSVs, or vendor PDFs. The AI Vision backend will OCR, extract, and categorize them automatically.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='block-explainer'>Please import bank statements, invoices, or any documents that could help. The AI will extract and categorize them automatically to assist you.</p>", unsafe_allow_html=True)
     
     # Drag and Drop Box
     uploaded_files = st.file_uploader("", type=['csv', 'pdf', 'png', 'jpeg', 'jpg'], accept_multiple_files=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("Initialize Pipeline", type="primary", use_container_width=True):
         if not uploaded_files:
             st.warning("Awaiting document upload.")
         else:
-            with st.spinner("Neural extraction in progress..."):
+            with st.spinner("Extraction in progress..."):
                 for file in uploaded_files:
                     # CSV processing
                     if file.name.lower().endswith(".csv"):
@@ -391,9 +398,9 @@ with tab2:
                             
                             model = genai.GenerativeModel('gemini-1.5-flash')
                             prompt = '''
-                            You are a financial receipt/invoice analyzer for an Australian carpentry business.
+                            You are an extraction analyzer.
                             Extract details strictly into JSON without markdown backticks:
-                            {"Date": "YYYY-MM-DD", "Vendor": "Store/Company Name", "Total Amount": 0.00, "GST": 0.00, "Reference": "Job Name", "Confidence": 98}
+                            {"Date": "YYYY-MM-DD", "Vendor": "Store Name", "Total Amount": 0.00, "GST": 0.00, "Reference": "Ref", "Confidence": 98}
                             '''
                             
                             response = model.generate_content([prompt, images[0]])
@@ -444,8 +451,8 @@ with tab2:
     
     # Review Queue UI
     if len(st.session_state.review_queue) > 0:
-        st.markdown(f"### ⚠️ Action Required: Human Validation ({len(st.session_state.review_queue)})")
-        st.markdown("<p style='color:var(--text-muted); font-size:0.9rem;'>The vision model reported <95% probability on these items.</p>", unsafe_allow_html=True)
+        st.markdown("### Action Required: Human Validation")
+        st.markdown("<p class='block-explainer'>The vision model reported a low probability on these items and requires manual verification.</p>", unsafe_allow_html=True)
         
         for idx, q_item in enumerate(st.session_state.review_queue):
             with st.expander(f"Anomaly: {q_item['Source']} ({q_item['Confidence']} Confidence) — {q_item['Vendor']} (${q_item['Amount']})", expanded=True):
@@ -466,18 +473,15 @@ with tab2:
 
     # Processed Transactions Ledger
     st.markdown("### Transaction Ledger")
-    st.markdown("<p style='color:var(--text-muted); font-size:0.9rem;'>Immutable record of system-verified ingestions.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='block-explainer'>An immutable record of system-verified ingestions mapped to the core framework.</p>", unsafe_allow_html=True)
     if st.session_state.transactions:
         df_txn = pd.DataFrame(st.session_state.transactions)
-        def color_ledger(row):
-            if row['Category'] == 'Income': return ['background-color: rgba(57, 255, 20, 0.05); color: #39FF14'] * len(row)
-            return [''] * len(row)
-            
-        st.dataframe(df_txn.style.apply(color_ledger, axis=1), use_container_width=True, hide_index=True)
+        st.dataframe(df_txn, use_container_width=True, hide_index=True)
     else:
         st.markdown("""
-        <div style="padding: 40px; text-align: center; border: 1px dashed #30363d; border-radius: 12px; color: #8b949e;">
-            <div style="font-size: 2rem; margin-bottom: 10px;">📉</div>
+        <div style="padding: 60px; text-align: center; border: 1px dashed #30363d; border-radius: 12px; color: #8b949e; font-weight: 300;">
             No transactions verified. Database is empty.
         </div>
         """, unsafe_allow_html=True)
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
