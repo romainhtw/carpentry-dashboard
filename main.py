@@ -8,9 +8,9 @@ import json
 from PIL import Image
 
 # Page Configuration
-st.set_page_config(page_title="Carpentry Engine", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Carpentry Engine", layout="wide", initial_sidebar_state="collapsed")
 
-# Ultra-Minimalist CSS Injection (3 Colors Max: Zinc Dark, Soft White, Accent Blue)
+# Ultra-Minimalist CSS Injection (Mobile Responsive Updates)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -31,6 +31,7 @@ st.markdown("""
     /* Hide standard header/footer for clean app feel */
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
+    [data-testid="collapsedControl"] { display: none; } /* Hide the hamburger menu entirely now */
 
     /* Custom SV-Style Metric Cards with Airy Padding */
     .sv-card {
@@ -83,12 +84,6 @@ st.markdown("""
         line-height: 1.5;
     }
 
-    /* Sidebar Styling */
-    [data-testid="stSidebar"] {
-        background-color: var(--bg-prime);
-        border-right: 1px solid var(--border);
-    }
-    
     /* Expander styling */
     .streamlit-expanderHeader {
         font-weight: 500 !important;
@@ -110,6 +105,24 @@ st.markdown("""
     hr {
         border-color: var(--border);
         margin: 4rem 0; /* More airy */
+    }
+    
+    /* MOBILE RESPONSIVE MEDIA QUERIES */
+    @media (max-width: 768px) {
+        .sv-card {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .sv-value {
+            font-size: 2.2rem;
+        }
+        hr {
+            margin: 2rem 0;
+        }
+        .block-explainer {
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -170,44 +183,44 @@ def calculate_thc(worker):
         
     return thc
 
-# --- Sidebar: Configuration ---
-st.sidebar.markdown("### System Configuration")
-st.sidebar.markdown("<p style='color:#a1a1aa; font-size:0.85rem; margin-bottom:20px;'>(On mobile devices, this menu contains all your core worker configuration).</p>", unsafe_allow_html=True)
+# Main Application Tabs Setup
+tab1, tab2, tab3 = st.tabs(["👷 Workforce Setup", "📊 Analytics Engine", "📁 Intelligence Pipeline"])
 
-api_key = st.sidebar.text_input("Gemini API Key", type="password")
-if api_key:
-    genai.configure(api_key=api_key)
-
-st.sidebar.markdown("<br>### Worker Profiles", unsafe_allow_html=True)
-for i, worker in enumerate(st.session_state.workers):
-    with st.sidebar.expander(worker["name"], expanded=False):
-        worker["name"] = st.text_input("Name", value=worker["name"], key=f"name_{i}")
-        worker["type"] = st.selectbox(
-            "Contract Type", 
-            ["ABN", "TFN Full-Time", "TFN Casual", "Sponsored"], 
-            index=["ABN", "TFN Full-Time", "TFN Casual", "Sponsored"].index(worker["type"]), 
-            key=f"type_{i}"
-        )
-        worker["base_rate"] = st.number_input("Base Rate ($/hr)", value=worker["base_rate"], min_value=0.0, step=1.0, key=f"base_rate_{i}")
-        if worker["type"] == "Sponsored":
-            worker["sponsorship_monthly"] = st.number_input("Monthly Visa Overhead ($)", value=worker["sponsorship_monthly"], min_value=0.0, step=100.0, key=f"visa_{i}")
-        worker["charge_rate"] = st.number_input("Offsite Charge ($/hr)", value=worker["charge_rate"], min_value=0.0, step=1.0, key=f"charge_{i}")
-        
-        c_hp, c_hb = st.columns(2)
-        worker["hours_paid"] = c_hp.number_input("Hrs Paid", value=worker.get("hours_paid", 40.0), key=f"hp_{i}")
-        worker["hours_billed"] = c_hb.number_input("Hrs Billed", value=worker.get("hours_billed", 35.0), key=f"hb_{i}")
-        
-        thc = calculate_thc(worker)
-        st.markdown(f"<div style='background:#18181b; padding:15px; border-radius:8px; text-align:center; border:1px solid #27272a; margin-top:10px;'><span style='color:#a1a1aa; font-size:0.8rem; text-transform:uppercase;'>True Hourly Cost</span><br><span style='color:#3b82f6; font-size:1.5rem; font-weight:300;'>${thc:.2f}/hr</span></div>", unsafe_allow_html=True)
-
-# Main Application Tabs
-tab1, tab2 = st.tabs(["Analytics Engine", "Intelligence Pipeline"])
-
+# --- TAB 1: Mobile-friendly Worker Setup ---
 with tab1:
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### System Configuration")
+    api_key = st.text_input("Gemini API Key", type="password", help="Required for Intelligence Pipeline OCR.")
+    if api_key:
+        genai.configure(api_key=api_key)
+
+    st.markdown("<br>### Worker Profiles", unsafe_allow_html=True)
+    st.markdown("<p class='block-explainer'>Configure each worker's exact contract parameters, rates, and weekly hours below. Expanding a profile will reveal mobile-friendly input fields.</p>", unsafe_allow_html=True)
     
+    for i, worker in enumerate(st.session_state.workers):
+        with st.expander(worker["name"], expanded=False):
+            w_col1, w_col2 = st.columns([1, 1])
+            with w_col1:
+                worker["name"] = st.text_input("Name", value=worker["name"], key=f"name_{i}")
+                worker["type"] = st.selectbox("Contract Type", ["ABN", "TFN Full-Time", "TFN Casual", "Sponsored"], index=["ABN", "TFN Full-Time", "TFN Casual", "Sponsored"].index(worker["type"]), key=f"type_{i}")
+                worker["base_rate"] = st.number_input("Base Rate ($/hr)", value=worker["base_rate"], min_value=0.0, step=1.0, key=f"base_rate_{i}")
+                
+            with w_col2:
+                if worker["type"] == "Sponsored":
+                    worker["sponsorship_monthly"] = st.number_input("Monthly Visa Overhead ($)", value=worker["sponsorship_monthly"], min_value=0.0, step=100.0, key=f"visa_{i}")
+                worker["charge_rate"] = st.number_input("Offsite Charge ($/hr)", value=worker["charge_rate"], min_value=0.0, step=1.0, key=f"charge_{i}")
+                worker["hours_paid"] = st.number_input("Weekly Hrs Paid", value=worker.get("hours_paid", 40.0), key=f"hp_{i}")
+                worker["hours_billed"] = st.number_input("Weekly Hrs Billed", value=worker.get("hours_billed", 35.0), key=f"hb_{i}")
+            
+            thc = calculate_thc(worker)
+            st.markdown(f"<div style='background:#18181b; padding:15px; border-radius:8px; text-align:center; border:1px solid #27272a; margin-top:10px;'><span style='color:#a1a1aa; font-size:0.8rem; text-transform:uppercase;'>True Hourly Cost (Calculated)</span><br><span style='color:#3b82f6; font-size:1.8rem; font-weight:300;'>${thc:.2f}/hr</span></div>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+
+# --- TAB 2: Analytics ---
+with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # --- Top Metrics Row ---
+    # Top Metrics Row
     FY_HOURS = 1824 # ~152 hrs * 12 months
     
     st.markdown("### The Margin Estimator")
@@ -221,7 +234,6 @@ with tab1:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Calculate Totals
     total_fy_profit = sum((global_charge_rate - calculate_thc(w)) * FY_HOURS for w in st.session_state.workers)
     total_fy_revenue = global_charge_rate * FY_HOURS * len(st.session_state.workers)
     
@@ -261,7 +273,6 @@ with tab1:
 
     st.divider()
     
-    # --- Margin Table styling ---
     st.markdown("### Individual Workforce Margins")
     st.markdown("<p class='block-explainer'>A granular breakdown of the true cost versus billed margin for every active worker.</p>", unsafe_allow_html=True)
     data = []
@@ -271,8 +282,8 @@ with tab1:
         data.append({
             "Worker Name": worker["name"],
             "Contract": worker["type"],
-            "True Cost (THC)": f"${thc:.2f}/hr",
-            "Charge Rate": f"${worker['charge_rate']:.2f}/hr",
+            "True Cost": f"${thc:.2f}/hr",
+            "Charge": f"${worker['charge_rate']:.2f}/hr",
             "Net Margin": f"${net_margin:.2f}/hr"
         })
 
@@ -281,7 +292,6 @@ with tab1:
 
     st.divider()
 
-    # --- Efficiency & Burn Rate ---
     eff_col, empty_col, burn_col = st.columns([10, 1, 10])
     with eff_col:
         st.markdown("### Billing Efficiency Check")
@@ -294,11 +304,13 @@ with tab1:
             gap_percent = (gap / hp * 100) if hp > 0 else 0
             eff_data.append({
                 "Worker": worker["name"], "Paid": hp, "Billed": hb, 
-                "Gap %": f"{gap_percent:.1f}%", "Status": "Action Required" if gap_percent > 10 else "Healthy"
+                "Gap %": f"{gap_percent:.1f}%", "Status": "Critical Leak > 10%" if gap_percent > 10 else "Healthy"
             })
         
         df_eff = pd.DataFrame(eff_data)
-        st.dataframe(df_eff, use_container_width=True, hide_index=True)
+        def highlight_gap(row):
+            return ['background-color: rgba(255, 51, 51, 0.15); color: #FF6B6B;' if 'Critical' in row['Status'] else '' for _ in row]
+        st.dataframe(df_eff.style.apply(highlight_gap, axis=1), use_container_width=True, hide_index=True)
 
     with burn_col:
         st.markdown("### Organizational Burn Rate")
@@ -325,14 +337,13 @@ with tab1:
 
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-with tab2:
+# --- TAB 3: Pipeline ---
+with tab3:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("### Document Intelligence Pipeline")
     st.markdown("<p class='block-explainer'>Please import bank statements, invoices, or any documents that could help. The AI will extract and categorize them automatically to assist you.</p>", unsafe_allow_html=True)
     
-    # Drag and Drop Box
     uploaded_files = st.file_uploader("", type=['csv', 'pdf', 'png', 'jpeg', 'jpg'], accept_multiple_files=True)
-    
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("Initialize Pipeline", type="primary", use_container_width=True):
@@ -341,7 +352,6 @@ with tab2:
         else:
             with st.spinner("Extraction in progress..."):
                 for file in uploaded_files:
-                    # CSV processing
                     if file.name.lower().endswith(".csv"):
                         try:
                             df_csv = pd.read_csv(file)
@@ -357,12 +367,9 @@ with tab2:
                                 
                                 category = "Other"
                                 linked_worker = None
-                                if any(x in desc for x in ["AMPOL", "BP", "SHELL"]):
-                                    category = "Fuel"
-                                elif any(x in desc for x in ["BUNNINGS", "TOTAL TOOLS", "PASLODE"]):
-                                    category = "Consumables"
-                                elif "OFFSITE" in desc:
-                                    category = "Income"
+                                if any(x in desc for x in ["AMPOL", "BP", "SHELL"]): category = "Fuel"
+                                elif any(x in desc for x in ["BUNNINGS", "TOTAL TOOLS", "PASLODE"]): category = "Consumables"
+                                elif "OFFSITE" in desc: category = "Income"
                                 
                                 for w in st.session_state.workers:
                                     if w["name"].upper() in desc:
@@ -370,8 +377,7 @@ with tab2:
                                         if category != "Income": category = "Labor Cost"
                                         break
                                 
-                                if "ABN" in desc and category == "Other":
-                                    category = "Labor Cost"
+                                if "ABN" in desc and category == "Other": category = "Labor Cost"
                                 
                                 st.session_state.transactions.append({
                                     "Date": date, "Vendor": desc, "Amount": amt, "GST": abs(float(amt)) / 11 if category in ["Consumables", "Fuel"] else 0,
@@ -380,12 +386,10 @@ with tab2:
                         except Exception as e:
                             st.error(f"Failed CSV parse {file.name}: {e}")
                     
-                    # PDF / Image processing
                     elif file.name.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg')):
                         if not api_key:
-                            st.error("API Key required. Please configure in the system sidebar.")
+                            st.error("API Key required. Please configure in the system tab.")
                             continue
-                        
                         try:
                             images = []
                             if file.name.lower().endswith(".pdf"):
@@ -398,8 +402,7 @@ with tab2:
                             
                             model = genai.GenerativeModel('gemini-1.5-flash')
                             prompt = '''
-                            You are an extraction analyzer.
-                            Extract details strictly into JSON without markdown backticks:
+                            You are an extraction analyzer. Extract details strictly into JSON without markdown backticks:
                             {"Date": "YYYY-MM-DD", "Vendor": "Store Name", "Total Amount": 0.00, "GST": 0.00, "Reference": "Ref", "Confidence": 98}
                             '''
                             
@@ -425,23 +428,14 @@ with tab2:
                             if "ABN" in desc and category == "Other": category = "Labor Cost"
                                 
                             confidence = int(data.get("Confidence", 90))
-                            
                             txn = {
-                                "Date": data.get("Date"), 
-                                "Vendor": data.get("Vendor", desc), 
-                                "Amount": float(data.get("Total Amount", 0)), 
-                                "GST": float(data.get("GST", 0)),
-                                "Category": category, 
-                                "Allocated To": linked_worker,
-                                "Confidence": f"{confidence}%", 
-                                "Source": file.name,
-                                "Status": "Awaiting Review" if confidence < 95 else "Confirmed"
+                                "Date": data.get("Date"), "Vendor": data.get("Vendor", desc), "Amount": float(data.get("Total Amount", 0)), 
+                                "GST": float(data.get("GST", 0)), "Category": category, "Allocated To": linked_worker,
+                                "Confidence": f"{confidence}%", "Source": file.name, "Status": "Awaiting Review" if confidence < 95 else "Confirmed"
                             }
                             
-                            if confidence < 95:
-                                st.session_state.review_queue.append(txn)
-                            else:
-                                st.session_state.transactions.append(txn)
+                            if confidence < 95: st.session_state.review_queue.append(txn)
+                            else: st.session_state.transactions.append(txn)
                                 
                         except Exception as e:
                             st.error(f"Vision failure on {file.name}: {e}")
@@ -483,5 +477,4 @@ with tab2:
             No transactions verified. Database is empty.
         </div>
         """, unsafe_allow_html=True)
-
     st.markdown("<br><br>", unsafe_allow_html=True)
